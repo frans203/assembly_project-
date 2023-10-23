@@ -15,7 +15,8 @@ include \masm32\macros\macros.asm
 
 .data
     fileName db "fotoanonima.bmp", 0H, 0AH ;nome do arquivo 
-    fileNameOut db "foto2.bmp", 0H, 0AH ;nome do arquivo de saida
+    fileNameOut db "foto2.bmp", 0H, 0AH ;nome do arquivo de saida copiado 
+    fileNameCen db "fotocensurada.bmp", 0H, 0AH ;nome do arquivo censurado 
 
     ;VARIAVEIS ARQUIVOS
     fileHandle dd 0
@@ -32,7 +33,11 @@ include \masm32\macros\macros.asm
 
     ;VARIAVEIS IMAGEM
     image_width dd 0 
-    image_width_pixels dd 0    
+    image_width_pixels dd 0
+
+
+    ;VARIAVEIS CENSURA
+    qLinhas dd 0    
 
 
 .code
@@ -80,15 +85,21 @@ start:
 
     ;6)LOOP PIXELS
     loop_pixels:
-       invoke ReadFile, fileHandle, addr pixelsArray, image_width_pixels , addr readCount, NULL ;
+       invoke ReadFile, fileHandle, addr pixelsArray, 3 , addr readCount, NULL ;
        CMP readCount, 0
-       je out_loop
-
-       INVOKE WriteFile, fileHandle02, addr pixelsArray, image_width_pixels, addr writeCount, NULL ;
-       jmp loop_pixels
-
+       mov eax, offset pixelsArray
+       mov ebx, 0
+       mov ecx, 0
+       mov edx, 0
     
+       mov [eax], ebx
+       mov [eax + 1], ecx
+       mov [eax + 2], edx
 
+       je out_loop 
+       INVOKE WriteFile, fileHandle02, addr pixelsArray, 3, addr writeCount, NULL ;
+       jmp loop_pixels
+        
    
     out_loop:
         ;APENAS PARA TESTE:
