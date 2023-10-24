@@ -37,21 +37,24 @@ include \masm32\macros\macros.asm
     
     image_width_pixels dd 0 
     image_width_bytes dd 0
+    line_count dd 0
+    pixel_count dd 0
+    nbytes dd 0
 
     ; Variaveis fornecidas pelo usuario
     
-    fileName db 50 dup(0)
-    start_x dd 0
-    start_y dd 0
-    rectangle_width dd 0
-    rectangle_height dd 0
+    ;fileName db 50 dup(0)
+    ;start_x dd 0
+    ;start_y dd 0
+    ;rectangle_width dd 0
+    ;rectangle_height dd 0
 
     ; Debugar
-    ;fileName db "fotoanonima.bmp", 0H, 0AH
-    ;start_x dd 10
-    ;start_y dd 15
-    ;rectangle_width dd 20
-    ;rectangle_height dd 25
+    fileName db "fotoanonima.bmp", 0H, 0AH
+    start_x dd 400
+    start_y dd 100
+    rectangle_width dd 400
+    rectangle_height dd 100
 
     ; Strings
     
@@ -72,7 +75,7 @@ start:
     
     INVOKE GetStdHandle, STD_OUTPUT_HANDLE
     MOV outputHandle, eax
-
+    COMMENT @
     ; --- Leitura das variaveis ---
 
         ; fileName
@@ -161,7 +164,7 @@ start:
 
     INVOKE atodw, addr inputString
     MOV rectangle_height, eax
-
+@
     ; --- LENDO ARQUIVO ORIGINAL ---
     
     INVOKE CreateFile, addr fileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
@@ -197,40 +200,156 @@ start:
     mov image_width_bytes, eax
     
 
-    INVOKE WriteFile, fileHandle2, addr image_width_pixels, 4, addr writeCount, NULL ;
+    INVOKE WriteFile, fileHandle2, addr image_width_pixels, 4, addr writeCount, NULL
 
     ; --- LENDO 32 BYTES RESTANTES E ESCREVENDO NO ARQUIVO DE SAIDA ---
     
-    INVOKE ReadFile, fileHandle, addr fileBuffer, 32, addr readCount, NULL ;
-    INVOKE WriteFile, fileHandle2, addr fileBuffer, 32, addr writeCount, NULL ;
+    INVOKE ReadFile, fileHandle, addr fileBuffer, 32, addr readCount, NULL
+    INVOKE WriteFile, fileHandle2, addr fileBuffer, 32, addr writeCount, NULL
     
 
     ; --- LOOP PIXELS ---
     
-    loop_pixels:
-       invoke ReadFile, fileHandle, addr pixelsArray, 3 , addr readCount, NULL ;
-       CMP readCount, 0
-       mov eax, offset pixelsArray
-       mov ebx, 0
-       mov ecx, 0
-       mov edx, 0
+    loop_pixels_inicial:
+        ; Comparacao entre line_count e start_y
+        MOV eax, start_y
+        MOV ecx, line_count
+        CMP eax, ecx
+        JE loop_pixels_criticos
+
+        invoke ReadFile, fileHandle, addr pixelsArray, image_width_bytes , addr readCount, NULL
+        CMP readCount, 0
+        JE out_loop
+
+        INVOKE WriteFile, fileHandle2, addr pixelsArray, image_width_bytes, addr writeCount, NULL
+
+        MOV ecx, line_count
+        INC ecx
+        MOV line_count, ecx
+        JMP loop_pixels_inicial
+
+    loop_pixels_criticos:
+        ; Checa a altura
+        MOV eax, start_y
+        ADD eax, rectangle_height
+        MOV ecx, line_count
+        CMP eax, ecx
+        JE loop_pixels_final
+
+        ; Checa a largura
+        ;MOV eax, start_x
+        ;MOV ecx, pixel_count
+        ;CMP ecx, eax
+        ;JL copia_normal
+        ;ADD eax, rectangle_width
+        ;CMP ecx, eax
+        ;JG copia_normal
+        ;JMP copia_preto
+
+        copia_normal_esquerda:
+            MOV eax, start_x
+            mov ebx, 3
+            MUL ebx
+
+            MOV nbytes, eax
+            
+            INVOKE ReadFile, fileHandle, addr pixelsArray, nbytes , addr readCount, NULL
+            CMP readCount, 0
+            JE out_loop
+
+            INVOKE WriteFile, fileHandle2, addr pixelsArray, nbytes, addr writeCount, NULL
+
+            ;MOV ecx, pixel_count
+            ;INC ecx
+            ;CMP ecx, image_width_pixels
+            ;JE incrementa_linha
+            ;MOV pixel_count, ecx
+            
+            ;JMP loop_pixels_criticos
+
+        copia_preto:
+            MOV ecx, pixel_count
+            MOV eax, rectangle_width
+            CMP eax, ecx
+            JE copia_normal_direita
+            
+            invoke ReadFile, fileHandle, addr pixelsArray, 3 , addr readCount, NULL
+            CMP readCount, 0
+            JE out_loop
+         
+            MOV eax, offset pixelsArray
+            MOV ebx, 0
     
-       mov [eax], ebx
-       mov [eax + 1], ecx
-       mov [eax + 2], edx
+            MOV [eax], ebx
+            MOV [eax + 1], ebx
+            MOV [eax + 2], ebx
 
-       je out_loop 
-       INVOKE WriteFile, fileHandle2, addr pixelsArray, 3, addr writeCount, NULL ;
-       jmp loop_pixels
+            INVOKE WriteFile, fileHandle2, addr pixelsArray, 3, addr writeCount, NULL
+            
+            MOV ecx, pixel_count
+            INC ecx
+            MOV pixel_count, ecx
 
+            JMP copia_preto
+
+            ;MOV ecx, pixel_count
+            ;INC ecx
+            ;CMP ecx, image_width_pixels
+            ;JE incrementa_linha
+            ;MOV pixel_count, ecx
+            
+            ;JMP loop_pixels_criticos
+
+        copia_normal_direita:
+            MOV ecx, 0
+            MOV pixel_count, ecx
+            
+            MOV ecx, image_width_pixels
+            MOV eax, start_x
+            ADD eax, rectangle_width
+            SUB ecx, eax
+            MOV nbytes, ecx
+
+            MOV eax, nbytes
+            mov ebx, 3
+            MUL ebx
+
+            MOV nbytes, eax
+            
+            INVOKE ReadFile, fileHandle, addr pixelsArray, nbytes, addr readCount, NULL
+            CMP readCount, 0
+            JE out_loop
+
+            INVOKE WriteFile, fileHandle2, addr pixelsArray, nbytes, addr writeCount, NULL
+
+        incrementa_linha:
+            MOV ecx, line_count
+            INC ecx
+            MOV line_count, ecx
+            MOV ecx, 0
+            MOV pixel_count, ecx
+            JMP loop_pixels_criticos
+
+    loop_pixels_final:
+        INVOKE ReadFile, fileHandle, addr pixelsArray, image_width_bytes, addr readCount, NULL
+        CMP readCount, 0
+        JE out_loop
+
+        INVOKE WriteFile, fileHandle2, addr pixelsArray, image_width_bytes, addr writeCount, NULL
+
+        JMP loop_pixels_final
    
     out_loop:
         ;APENAS PARA TESTE:
-        printf("%d\n", image_width_pixels)
-        printf("%d\n", image_width_bytes)
-        printf("%d\n", start_x)
-        printf("%d\n", start_y)
-        printf("%d\n", rectangle_width)
-        printf("%d\n", rectangle_height)
+        MOV eax, start_x
+        mov ebx, 3
+        MUL ebx
+        printf("%d\n", eax)
+        printf("Image Width Pixels %d\n", image_width_pixels)
+        printf("Image Width Bytes %d\n", image_width_bytes)
+        printf("Start_x %d\n", start_x)
+        printf("Start_y %d\n", start_y)
+        printf("rectangle_width %d\n", rectangle_width)
+        printf("rectangle_height %d\n", rectangle_height)
         invoke ExitProcess, 0
 end start
