@@ -43,18 +43,18 @@ include \masm32\macros\macros.asm
 
     ; Variaveis fornecidas pelo usuario
     
-    ;fileName db 50 dup(0)
-    ;start_x dd 0
-    ;start_y dd 0
-    ;rectangle_width dd 0
-    ;rectangle_height dd 0
+    fileName db 50 dup(0)
+    start_x dd 0
+    start_y dd 0
+    rectangle_width dd 0
+    rectangle_height dd 0
 
     ; Debugar
-    fileName db "fotoanonima.bmp", 0H, 0AH
-    start_x dd 400
-    start_y dd 100
-    rectangle_width dd 400
-    rectangle_height dd 100
+    ;fileName db "fotoanonima.bmp", 0H, 0AH
+    ;start_x dd 400
+    ;start_y dd 100
+    ;rectangle_width dd 400
+    ;rectangle_height dd 100
 
     ; Strings
     
@@ -75,7 +75,7 @@ start:
     
     INVOKE GetStdHandle, STD_OUTPUT_HANDLE
     MOV outputHandle, eax
-    COMMENT @
+    
     ; --- Leitura das variaveis ---
 
         ; fileName
@@ -164,7 +164,7 @@ start:
 
     INVOKE atodw, addr inputString
     MOV rectangle_height, eax
-@
+
     ; --- LENDO ARQUIVO ORIGINAL ---
     
     INVOKE CreateFile, addr fileName, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL
@@ -229,22 +229,12 @@ start:
         JMP loop_pixels_inicial
 
     loop_pixels_criticos:
-        ; Checa a altura
+        ; Vai ficar nesse loop ate o line_count superar o start_y + rectangle_width
         MOV eax, start_y
         ADD eax, rectangle_height
         MOV ecx, line_count
         CMP eax, ecx
         JE loop_pixels_final
-
-        ; Checa a largura
-        ;MOV eax, start_x
-        ;MOV ecx, pixel_count
-        ;CMP ecx, eax
-        ;JL copia_normal
-        ;ADD eax, rectangle_width
-        ;CMP ecx, eax
-        ;JG copia_normal
-        ;JMP copia_preto
 
         copia_normal_esquerda:
             MOV eax, start_x
@@ -259,15 +249,8 @@ start:
 
             INVOKE WriteFile, fileHandle2, addr pixelsArray, nbytes, addr writeCount, NULL
 
-            ;MOV ecx, pixel_count
-            ;INC ecx
-            ;CMP ecx, image_width_pixels
-            ;JE incrementa_linha
-            ;MOV pixel_count, ecx
-            
-            ;JMP loop_pixels_criticos
-
         copia_preto:
+        ; Copia em loop ate o pixel_count superar o rectangle_width
             MOV ecx, pixel_count
             MOV eax, rectangle_width
             CMP eax, ecx
@@ -292,15 +275,8 @@ start:
 
             JMP copia_preto
 
-            ;MOV ecx, pixel_count
-            ;INC ecx
-            ;CMP ecx, image_width_pixels
-            ;JE incrementa_linha
-            ;MOV pixel_count, ecx
-            
-            ;JMP loop_pixels_criticos
-
         copia_normal_direita:
+        ; Copia o restante dos pixels a direita (image_width_pixels - start_y - rectangle_width)
             MOV ecx, 0
             MOV pixel_count, ecx
             
@@ -331,6 +307,7 @@ start:
             JMP loop_pixels_criticos
 
     loop_pixels_final:
+    ; Copia o restante dos pixels da imagem
         INVOKE ReadFile, fileHandle, addr pixelsArray, image_width_bytes, addr readCount, NULL
         CMP readCount, 0
         JE out_loop
