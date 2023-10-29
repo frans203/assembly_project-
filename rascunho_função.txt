@@ -1,0 +1,43 @@
+push offset pixels_array
+push start_x
+push rectangle_width
+CALL pinta preto
+
+
+pinta_preto:
+	push ebp
+	mov ebp, esp
+	sup esp, 8
+
+	mov DWORD PTR [ebp-4], 0
+
+	mov ecx, DWORD PTR [ebp+16]
+        
+            mov eax, DWORD PTR [ebp+12]
+            mov ebx, 3
+            mul ebx
+            add DWORD PTR [ebp-8], eax
+                    
+        pinta_preto:
+            mov edx, DWORD PTR [ebp+8]
+            cmp edx, DWORD PTR [ebp-4]
+            je final_funcao
+            
+            
+            mov eax, DWORD PTR [ebp-4]
+            mov edx, 3
+            mul edx
+            add eax, DWORD PTR [ebp-8]
+          
+            mov edx, 0
+            mov [ecx + eax + 0], edx
+            mov [ecx + eax +  1], edx
+            mov [ecx + eax +  2], edx
+            inc DWORD PTR [ebp-4]
+            jmp pinta_preto
+	
+	final_funcao:
+		mov esp, ebp
+		pop ebp
+		ret 12
+		

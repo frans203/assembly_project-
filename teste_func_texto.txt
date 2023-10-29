@@ -1,0 +1,35 @@
+pintarPixel:
+	push ebp
+	mov ebp, esp
+
+
+	    MOV eax, DWORD PTR [ebp + 12]
+            MOV ebx, 0
+    
+            MOV [eax], ebx
+            MOV [eax + 1], ebx
+            MOV [eax + 2], ebx
+
+            MOV ecx, DWORD PTR [ebp + 8]
+            INC ecx
+            MOV DWORD PTR [ebp + 8], ecx
+
+
+	mov esp, ebp
+	pop ebp
+	ret 8
+
+
+
+
+PARA REFERENCIA APENAS DENTRO DE COPIA PRETO
+MOV eax, offset pixelsArray
+            MOV ebx, 0
+    
+            MOV [eax], ebx
+            MOV [eax + 1], ebx
+            MOV [eax + 2], ebx
+
+            MOV ecx, pixel_count
+            INC ecx
+            MOV pixel_count, ecx
