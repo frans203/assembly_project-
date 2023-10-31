@@ -98,10 +98,10 @@ pinta_preto_func:
             mul edx
             add eax, DWORD PTR [ebp-8]; somando ebp-4 em bytes com start_x em bytes
           
-            mov edx, 0
-            mov [ecx + eax + 0], edx
-            mov [ecx + eax +  1], edx
-            mov [ecx + eax +  2], edx ; pintando os bytes de preto
+            ;mov edx, 0
+            mov BYTE PTR[ecx + eax + 0], 0
+            mov BYTE PTR[ecx + eax +  1], 0
+            mov BYTE PTR[ecx + eax +  2], 0 ; pintando os bytes de preto
             inc DWORD PTR [ebp-4]  ;incrementando ebp-4
             jmp pinta_preto_loop
 	
