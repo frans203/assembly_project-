@@ -22,7 +22,6 @@ include \masm32\macros\macros.asm
     pixelsArray db 6480 dup(0) 
     readCount dd 0 
     writeCount dd 0
-    ; fileNameOut db "fotoAlterada.bmp", 0H, 0AH ;nome do arquivo de saida
 
     ; Variaveis para entrada e saida
     
@@ -51,15 +50,6 @@ include \masm32\macros\macros.asm
     rectangle_width dd 0
     rectangle_width_bytes dd 0
     rectangle_height dd 0
-    
-
-    ; Debugar
-    ;fileName db "fotoanonima.bmp", 0H, 0AH
-    ;start_x dd 250
-    ;start_y dd 310
-    ;rectangle_width dd 230
-    ;rectangle_height dd 30
-    ;rectangle_width_x dd 0
 
     ; Strings
     
@@ -77,50 +67,48 @@ include \masm32\macros\macros.asm
 ; --- Funcao ---
 
 pinta_preto_func:
-	push ebp
-	mov ebp, esp
-	sub esp, 8
+    push ebp
+    mov ebp, esp
+    sub esp, 8
 
-      ; Zerando variaveis locais 
-	mov DWORD PTR [ebp-4], 0 ; variavel para contagem de pixels
-      mov DWORD PTR [ebp-8], 0 ; variavel para start_x em bytes
-	mov ecx, DWORD PTR [ebp+16] ; offset pixels_array
+    ; Zerando variaveis locais 
+    mov DWORD PTR [ebp-4], 0 ; variavel para contagem de pixels
+    mov DWORD PTR [ebp-8], 0 ; variavel para start_x em bytes
+    mov ecx, DWORD PTR [ebp+16] ; offset pixels_array
 
-      ; Pegando o start x
-      mov eax, DWORD PTR [ebp+12] ; start_x
-      mov ebx, 3
-      mul ebx
-      add DWORD PTR [ebp-8], eax ; colocando em ebp-8 start_x em bytes
+    ; Pegando o start x
+    mov eax, DWORD PTR [ebp+12] ; start_x
+    mov ebx, 3
+    mul ebx
+    add DWORD PTR [ebp-8], eax ; colocando em ebp-8 start_x em bytes
                     
-        pinta_preto_loop:
-            mov edx, DWORD PTR [ebp+8] ; rectangle_width
-            cmp edx, DWORD PTR [ebp-4] ; comparando a contagem de pixels com rectangle_width
-            je final_funcao
+    pinta_preto_loop:
+        mov edx, DWORD PTR [ebp+8] ; rectangle_width
+        cmp edx, DWORD PTR [ebp-4] ; comparando a contagem de pixels com rectangle_width
+        je final_funcao
             
-            ; Pegando o offset do proximo pixel a ser pintado
-            mov eax, DWORD PTR [ebp-4]
-            mov edx, 3
-            mul edx
-            add eax, DWORD PTR [ebp-8]; somando a contagem de pixels em bytes com start_x em bytes
+        ; Pegando o offset do proximo pixel a ser pintado
+        mov eax, DWORD PTR [ebp-4]
+        mov edx, 3
+        mul edx
+        add eax, DWORD PTR [ebp-8]; somando a contagem de pixels em bytes com start_x em bytes
 
-            ; Pintando os 3 bytes correspondentes ao pixel a ser pintado
-            mov BYTE PTR [ecx + eax + 0], 0
-            mov BYTE PTR [ecx + eax +  1], 0
-            mov BYTE PTR [ecx + eax +  2], 0 ; pintando os bytes de preto
+        ; Pintando os 3 bytes correspondentes ao pixel a ser pintado
+        mov BYTE PTR [ecx + eax + 0], 0
+        mov BYTE PTR [ecx + eax +  1], 0
+        mov BYTE PTR [ecx + eax +  2], 0 ; pintando os bytes de preto
             
-            inc DWORD PTR [ebp-4]  ; Incrementa a contagem de pixels
-            jmp pinta_preto_loop
+        inc DWORD PTR [ebp-4]  ; Incrementa a contagem de pixels
+        jmp pinta_preto_loop
 	
-      ; Epilogo da funcao
-	final_funcao:
-		mov esp, ebp
-		pop ebp
-		ret 12
-		
-;--- Codigo ---
-
+    ; Epilogo da funcao
+    final_funcao:
+        mov esp, ebp
+	  pop ebp
+	  ret 12
+	
 start:
-    ; --- ENTRADA/SAIDA ---
+    ; --- Entrada/Saida ---
     
     INVOKE GetStdHandle, STD_INPUT_HANDLE
     MOV inputHandle, eax
@@ -292,11 +280,11 @@ start:
         CMP eax, ecx
         JE loop_linhas_final
         
-        ; Chamada da funcao e modificacao do pixel array
         invoke ReadFile, fileHandle, addr pixelsArray, image_width_bytes, addr readCount, NULL
         CMP readCount, 0
         JE fim_programa
 
+        ; Chamada da funcao para modificacao do pixel array
         push offset pixelsArray
         push start_x
         push rectangle_width
