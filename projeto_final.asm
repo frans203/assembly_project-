@@ -67,6 +67,17 @@ include \masm32\macros\macros.asm
 ; --- Funcao ---
 
 pinta_preto_func:
+
+    ; [ebp+16] -> array de pixels
+    ; [ebp+12] -> start_x (pixels)
+    ; [ebp+8] -> rectangle_width (pixels)
+
+    ; [ebp+4] -> endereco de retorno
+    ; [ebp] -> endereco antigo de ebp
+
+    ; [ebp-4] -> contador de pixels pintados
+    ; [ebp-8] -> start_x (bytes)
+    
     push ebp
     mov ebp, esp
     sub esp, 8
