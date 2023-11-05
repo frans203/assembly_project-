@@ -1,3 +1,8 @@
+; PROJETO ASSEMBLY ARQUITETURA DE COMPUTADORES 1
+; ALUNOS:
+; MAURO COIMBRA BARRETO COSTA NETO - 20220160386
+; FRANCISCO SANTANA DE SOUSA JUNIOR - 20210025969
+
 .686
 .model flat, stdcall
 option casemap :none
@@ -147,7 +152,7 @@ start:
 
     ; fileNameOut
         
-    INVOKE WriteConsole, outputHandle, addr request_file, sizeof request_file, addr console_count, NULL
+    INVOKE WriteConsole, outputHandle, addr request_file_out, sizeof request_file, addr console_count, NULL
     INVOKE ReadConsole, inputHandle, addr fileNameOut, sizeof fileNameOut, addr console_count, NULL
 
     MOV esi, offset fileNameOut
